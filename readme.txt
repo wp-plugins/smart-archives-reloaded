@@ -40,7 +40,9 @@ Make sure your new host is running PHP 5. Add this line to wp-config.php:
 
 = Fancy archive not working =
 
-Make sure you have wp_footer() in footer.php in your theme directory.
+In footer.php in your theme directory, make sure you have this code somewhere:
+
+`<?php wp_footer(); ?>`.
 
 = "Can't open cache file!" =
 
@@ -52,9 +54,6 @@ Go to your wp-content/uploads directory, create an empty file called "sar_cache.
 2. The Settings Page
 
 == Changelog ==
-
-= 1.7.2 =
-* added Chinese l10n
 
 = 1.7.1 =
 * fancy archive improvements
