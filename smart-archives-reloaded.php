@@ -30,11 +30,12 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
  * Display the archives
  *
  * $args:
- * format: string, one of these: block | list | both | fancy
+ * format: string, one of these: block | list | both | fancy | menu
  * anchors: boolean
  * block_numeric: boolean
  * list_format: string
  * date_format: string
+ * posts_per_month: integer
  *
  * $qv: see query_posts()
  */
