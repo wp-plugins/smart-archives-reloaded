@@ -34,7 +34,10 @@ class scbUtil {
 
 	// Enable delayed activation ( to be used with scb_init() )
 	static function add_activation_hook( $plugin, $callback ) {
-		add_action( 'scb_activation_' . plugin_basename( $plugin ), $callback );
+		if ( defined( 'SCB_LOAD_MU' ) )
+			register_activation_hook( $plugin, $callback );
+		else
+			add_action( 'scb_activation_' . plugin_basename( $plugin ), $callback );
 	}
 
 	// Have more than one uninstall hooks; also prevents an UPDATE query on each page load
@@ -42,6 +45,11 @@ class scbUtil {
 		register_uninstall_hook( $plugin, '__return_false' );	// dummy
 
 		add_action( 'uninstall_' . plugin_basename( $plugin ), $callback );
+	}
+
+	// Get the current, full URL
+	static function get_current_url() {
+		return ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 	}
 
 	// Apply a function to each element of a ( nested ) array recursively
@@ -115,18 +123,35 @@ class scbUtil {
 
 //_____Minimalist HTML framework_____
 
-
+/*
+ * Examples:
+ *
+ * html( 'p', 'Hello world!' );												<p>Hello world!</p>
+ * html( 'a', array( 'href' => 'http://example.com' ), 'A link' );			<a href="http://example.com">A link</a>
+ * html( 'img', array( 'src' => 'http://example.com/f.jpg' ) );				<img src="http://example.com/f.jpg" />
+ * html( 'ul', html( 'li', 'a' ), html( 'li', 'b' ) );						<ul><li>a</li><li>b</li></ul>
+ */
 if ( ! function_exists( 'html' ) ):
-function html( $tag, $attributes = array(), $content = '' ) {
-	if ( is_array( $attributes ) ) {
+function html( $tag ) {
+	$args = func_get_args();
+
+	$tag = array_shift( $args );
+
+	if ( is_array( $args[0] ) ) {
 		$closing = $tag;
+		$attributes = array_shift( $args );
 		foreach ( $attributes as $key => $value ) {
-			$tag .= ' ' . $key . '="' . esc_attr( $value ) . '"';
+			$tag .= ' ' . $key . '="' . htmlspecialchars( $value, ENT_QUOTES ) . '"';
 		}
 	} else {
-		$content = $attributes;
-		list( $closing ) = explode(' ', $tag, 2);
+		list( $closing ) = explode( ' ', $tag, 2 );
 	}
+
+	if ( in_array( $closing, array( 'area', 'base', 'basefont', 'br', 'hr', 'input', 'img', 'link', 'meta' ) ) ) {
+		return "<{$tag} />";
+	}
+
+	$content = implode( '', $args );
 
 	return "<{$tag}>{$content}</{$closing}>";
 }

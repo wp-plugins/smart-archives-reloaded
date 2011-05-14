@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Smart Archives Reloaded
-Version: 2.0.3
+Version: 2.0.4
 Description: An elegant and easy way to present your posts, grouped by year and month.
 Author: scribu
 Author URI: http://scribu.net
@@ -26,7 +26,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-require dirname( __FILE__ ) . '/scb/load.php';
+@include dirname( __FILE__ ) . '/scb/load.php';
 
 function _sar_init() {
 	load_plugin_textdomain( 'smart-archives-reloaded', '', dirname( plugin_basename( __FILE__ ) ) . '/lang' );
