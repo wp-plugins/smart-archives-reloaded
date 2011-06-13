@@ -100,61 +100,46 @@ class SAR_Generator {
 
 	// The "menu"
 	protected function generate_menu() {
-		$year_list =
-		html( 'ul class="year-list"',
-			$this->generate_year_list( get_query_var( 'year' ) )
+		$data = array(
+			'year-list' => $this->generate_year_list( get_query_var( 'year' ) ),
+			'month-list' => $this->generate_month_list( $this->get_current_year(), get_query_var( 'monthnum' ) )
 		);
 
-		$month_list =
-		html( 'ul class="month-list"',
-			$this->generate_month_list( $this->get_current_year(), get_query_var( 'monthnum' ) )
-		);
-
-		return html( 'div id="smart-archives-menu"', $year_list . $month_list, "\n" );
+		return self::mustache_render( 'menu.html', $data );
 	}
 
 	// The "fancy" archive
 	protected function generate_fancy() {
 		$months_long = $this->get_months();
 
-		$year_list =
-		html( "ul class='tabs year-list'",
-			$this->generate_year_list()
+		$data = array(
+			'year-list' => $this->generate_year_list(),
 		);
 
-		$block = '';
 		foreach ( $this->get_years_with_posts( 'asc' ) as $year ) {
-			// Generate top panes
-			$months =
-			html( "ul id='month-list-$year' class='tabs month-list'",
-				$this->generate_month_list( $year )
+			$pane = array(
+				'year' => $year,
+				'month-list' => $this->generate_month_list( $year )
 			);
 
-			// Generate post lists
-			$list = '';
 			foreach ( range( 1, 12 ) as $i ) {
 				$post_list = $this->generate_post_list( $year, $i, "\n\t\t" );
 
 				if ( !$post_list )
 					continue;
 
-				// Append to list
-				$list .=
-				html( 'div class="pane"',
-					 html( 'h2 class="month-heading"',
-						"$months_long[$i] $year "
-						.html( 'span class="month-archive-link"',
-							'( '. html_link( get_month_link( $year, $i ), __( 'View complete archive page', 'smart-archives-reloaded' ) ) .' )'
-						)
-					)
-					.html( 'ul class="archive-list"', $post_list )
+				$pane['post-lists'][] = array(
+					'heading' => "$months_long[$i] $year",
+					'archive-link' => get_month_link( $year, $i ),
+					'archive-text' => __( 'View complete archive page', 'smart-archives-reloaded' ),
+					'post-list' => $post_list,
 				);
-			} // end month block
+			}
 
-			$block .= html( 'div class="pane"', $months . $list );
-		} // end year block
+			$data['year-panes'][] = $pane;
+		}
 
-		return html( 'div id="smart-archives-fancy"', $year_list . $block );
+		return self::mustache_render( 'fancy.html', $data );
 	}
 
 	// Both
@@ -166,7 +151,8 @@ class SAR_Generator {
 	protected function generate_list() {
 		$months_long = $this->get_months();
 
-		$list = '';
+		$data = array();
+
 		foreach ( $this->get_years_with_posts( 'desc' ) as $year ) {
 			foreach ( range( 12, 1 ) as $i ) {
 				// Get post links for current month
@@ -175,37 +161,31 @@ class SAR_Generator {
 				if ( !$post_list )
 					continue;
 
-				// Set title format
-				if ( $this->args->anchors )
-					$el = "h2 id='{$year}{$i}'";
-				else
-					$el = "h2";
-
-				// Append to list
-				$list .=
-				html( $el,
-					html_link( get_month_link( $year, $i ), $months_long[$i] . ' ' . $year )
+				$data['post-lists'][] = array(
+					'id' => "{$year}{$i}",
+					'archive-link' => get_month_link( $year, $i ),
+					'archive-text' => $months_long[$i] . ' ' . $year,
+					'post-list' => $post_list,
 				);
+			}
+		}
 
-				$list .= html( 'ul', $post_list );
-			} // end month block
-		} // end year block
-
-		return html( 'div id="smart-archives-list"', $list );
+		return self::mustache_render( 'list.html', $data );
 	}
 
 	// The block
 	protected function generate_block() {
-		$block = '';
+		$data = array();
+
 		foreach ( $this->get_years_with_posts( 'desc' ) as $year ) {
-			$year_link = html( 'strong', html_link( get_year_link( $year ), $year ) . ':' );
-
-			$month_list = $this->generate_month_list( $year, get_query_var( 'monthnum' ), true );
-
-			$block .= html( 'li', $year_link . $month_list );
+			$data['month-lists'][] = array(
+				'year' => $year,
+				'year-link' => get_year_link( $year ),
+				'month-list' => $this->generate_month_list( $year, get_query_var( 'monthnum' ), true )
+			);
 		}
 
-		return html( "ul id='smart-archives-block'", $block );
+		return self::mustache_render( 'block.html', $data );
 	}
 
 
@@ -213,15 +193,17 @@ class SAR_Generator {
 
 
 	protected function generate_year_list( $current_year = 0 ) {
-		$year_list = '';
+		$data = array();
+
 		foreach ( $this->get_years_with_posts( 'asc' ) as $year ) {
-			$year_list .=
-			html( 'li',
-				$this->a_link( get_year_link( $year ), $year, $year == $current_year )
+			$data['years'][] = array(
+				'year-link' => get_year_link( $year ),
+				'year' => $year,
+				'is-current' => ( $year == $current_year ) ? array(true) : false
 			);
 		}
 
-		return $year_list;
+		return self::mustache_render( 'year-list.html', $data );
 	}
 
 	protected function generate_month_list( $year, $current_month = 0, $inline = false ) {
@@ -229,47 +211,49 @@ class SAR_Generator {
 
 		$in_current_year = ( get_query_var( 'year' ) == $year );
 
-		$month_list = '';
+		$data = array(
+			'inline' => $inline ? array(true) : false
+		);
+
 		foreach ( range( 1, 12 ) as $i ) {
-			$month = $month_names[$i];
-
-			if ( in_array( $i, $this->get_months_with_posts( $year ) ) ) {
-				$url = $this->args->anchors ? "#{$year}{$i}" : get_month_link( $year, $i );
-				$tmp = $this->a_link( $url, $month, $in_current_year && $i == $current_month );
-			}
-			else {
-				$tmp = html( 'span class="empty-month"', $month );
-			}
-
-			if ( $inline )
-				$month_list .= " $tmp";
-			else
-				$month_list .= "\n\t\t" . html( 'li', $tmp );
+			$data['months'][] = array(
+				'month' => $month_names[$i],
+				'month-link' => $this->args->anchors ? "#{$year}{$i}" : get_month_link( $year, $i ),
+				'is-current' => ( $in_current_year && $i == $current_month ) ? array(true) : false,
+				'is-empty' => ( !in_array( $i, $this->get_months_with_posts( $year ) ) ) ? array(true) : false
+			);
 		}
 
-		return $month_list;
+		return self::mustache_render( 'month-list.html', $data );
 	}
 
-	protected function generate_post_list( $year, $i, $indent ) {
+	protected function generate_post_list( $year, $i ) {
 		$posts = $this->get_posts( $year, $i );
 
 		if ( empty( $posts ) )
 			return false;
 
-		$post_list = '';
+		$active_tags = array();
+		foreach ( SAR_Core::get_available_tags() as $tag ) {
+			if ( false !== strpos( $this->args->list_format, $tag ) ) {
+				$active_tags[] = $tag;
+			}
+		}
+
+		$data = array();
+
 		foreach ( $posts as $post ) {
 			$list_item = $this->args->list_format;
 
-			foreach ( SAR_Core::get_available_tags() as $tag )
-				if ( false !== strpos( $this->args->list_format, $tag ) )
-					$list_item = str_replace( $tag, call_user_func( array( $this, 'substitute_' . substr( $tag, 1, -1 ) ), $post ), $list_item );
+			foreach ( $active_tags as $tag ) {
+				$list_item = str_replace( $tag, call_user_func( array( $this, 'substitute_' . substr( $tag, 1, -1 ) ), $post ), $list_item );
+			}
 
-			$post_list .= $indent . html( 'li', $list_item );
+			$data['posts'][] = array( 'item' => $list_item );
 		}
 
-		return $post_list;
+		return self::mustache_render( 'post-list.html', $data );
 	}
-
 
 	protected function get_months( $format = 'long' ) {
 		global $wp_locale;
@@ -290,12 +274,6 @@ class SAR_Generator {
 		}
 
 		return $months;
-	}
-
-	protected function a_link( $link, $title, $current ) {
-		$el = $current ? 'a class="current"' : 'a';
-
-		return html( $el . ' href="' . $link . '"', $title );
 	}
 
 
@@ -347,6 +325,15 @@ class SAR_Generator {
 
 		return implode( ', ', $categorylist );
 	}
+
+	static function mustache_render( $file, $data ) {
+		$template_path = locate_template( 'sar-templates/' . $file );
+		if ( !$template_path )
+			$template_path = dirname(__FILE__) . '/templates/' . $file;
+
+		return SAR_Core::mustache_render( $template_path, $data );
+	}
 }
 
 add_filter( 'posts_clauses', array( 'SAR_Generator', 'query_manipulation' ), 10, 2 );
+
