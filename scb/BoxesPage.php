@@ -1,19 +1,7 @@
 <?php
 
-/*
-Creates an admin page with widgets, similar to the dashboard
+// Admin screen with metaboxes base class
 
-For example, if you defined the boxes like this:
-
-$this->boxes = array( array( 'settings', 'Settings box', 'normal' )
-	... );
-
-You must also define two methods in your class for each box:
-
-function settings_box() - this is where the box content is echoed
-function settings_handler() - this is where the box settings are saved
-...
-*/
 abstract class scbBoxesPage extends scbAdminPage {
 	/*
 		A box definition looks like this:
@@ -37,7 +25,8 @@ abstract class scbBoxesPage extends scbAdminPage {
 		parent::page_init();
 
 		add_action( 'load-' . $this->pagehook, array( $this, 'boxes_init' ) );
-		add_filter( 'screen_layout_columns', array( $this, 'columns' ) );
+
+		add_screen_option( 'layout_columns', array( 'max' => $this->args['columns'], 'default' => $this->args['columns'] ) );
 	}
 
 	function default_css() {
@@ -111,7 +100,7 @@ abstract class scbBoxesPage extends scbAdminPage {
 						$this->args['column_widths'] = array( 98 );
 					$hide2 = $hide3 = $hide4 = 'display:none;';
 			}
-			
+
 			$this->args['column_widths'] = array_pad( $this->args['column_widths'], 4, 0 );
 		}
 ?>
@@ -155,12 +144,6 @@ abstract class scbBoxesPage extends scbAdminPage {
 		}
 	}
 
-	function columns( $columns ) {
-		$columns[$this->pagehook] = $this->args['columns'];
-
-		return $columns;
-	}
-
 	function uninstall() {
 		global $wpdb;
 
@@ -178,8 +161,6 @@ abstract class scbBoxesPage extends scbAdminPage {
 	}
 
 	function boxes_init() {
-		wp_enqueue_script( 'common' );
-		wp_enqueue_script( 'wp-lists' );
 		wp_enqueue_script( 'postbox' );
 
 		$registered = array();
@@ -249,5 +230,6 @@ EOT
 <?php
 	}
 }
+
 
 

@@ -1,5 +1,7 @@
 <?php
 
+// Various utilities
+
 class scbUtil {
 
 	// Force script enqueue
@@ -65,27 +67,14 @@ class scbUtil {
 
 	// Extract certain $keys from $array
 	static function array_extract( $array, $keys ) {
-		$r = array();
-
-		foreach ( $keys as $key )
-			if ( array_key_exists( $key, $array ) )
-				$r[$key] = $array[$key];
-
-		return $r;
+		_deprecated_function( 'scbUtil::array_extract', '3.1', 'wp_array_slice_assoc()' );
+		return wp_array_slice_assoc( $array, $keys );
 	}
 
 	// Extract a certain value from a list of arrays
 	static function array_pluck( $array, $key ) {
-		$r = array();
-
-		foreach ( $array as $value ) {
-			if ( is_object( $value ) )
-				$value = get_object_vars( $value );
-			if ( array_key_exists( $key, $value ) )
-				$r[] = $value[$key];
-		}
-
-		return $r;
+		_deprecated_function( 'scbUtil::array_pluck', '3.1', 'wp_list_pluck()' );
+		return wp_list_pluck( $array, $key );
 	}
 
 	// Transform a list of objects into an associative array
@@ -141,7 +130,13 @@ function html( $tag ) {
 		$closing = $tag;
 		$attributes = array_shift( $args );
 		foreach ( $attributes as $key => $value ) {
-			$tag .= ' ' . $key . '="' . htmlspecialchars( $value, ENT_QUOTES ) . '"';
+			if ( false === $value )
+				continue;
+
+			if ( true === $value )
+				$value = $key;
+
+			$tag .= ' ' . $key . '="' . esc_attr( $value ) . '"';
 		}
 	} else {
 		list( $closing ) = explode( ' ', $tag, 2 );
