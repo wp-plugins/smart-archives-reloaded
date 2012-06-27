@@ -26,17 +26,13 @@ Smart Archives Reloaded allows you to display a list of posts grouped by year an
 * [Justin Blanton](http://justinblanton.com), for the original [Smart Archives](http://justinblanton.com/projects/smartarchives/) plugin
 * [Simon Pritchard](http://www.conceptfusion.co.nz/), for the fancy format
 
-Links: [Plugin News](http://scribu.net/wordpress/smart-archives-reloaded) | [Author's Site](http://scribu.net)
+Links: [**Documentation**](http://github.com/scribu/smart-archives-reloaded/wiki) | [Plugin News](http://scribu.net/wordpress/smart-archives-reloaded) | [Author's Site](http://scribu.net)
 
 == Installation ==
 
 See [Installing Plugins](http://codex.wordpress.org/Managing_Plugins#Installing_Plugins).
 
-After activating it, create a new page or post and add `[smart_archives]` to the content.
-
-Alternatively, you can add `<?php smart_archives(); ?>` anywhere in your theme, where you want the archives displayed.
-
-See http://scribu.net/wordpress/smart-archives-reloaded for more usage examples.
+See the [wiki](http://github.com/scribu/smart-archives-reloaded/wiki) for more usage examples.
 
 == Frequently Asked Questions ==
 
